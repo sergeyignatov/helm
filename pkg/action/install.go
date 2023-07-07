@@ -96,6 +96,7 @@ type Install struct {
 	// (for things like templating). These are ignored if ClientOnly is false
 	KubeVersion *chartutil.KubeVersion
 	APIVersions chartutil.VersionSet
+  StrictAPIVersions bool
 	// Used by helm template to render charts with .Release.IsUpgrade. Ignored if Dry-Run is false
 	IsUpgrade bool
 	// Enable DNS lookups when rendering templates
@@ -245,7 +246,11 @@ func (i *Install) RunWithContext(ctx context.Context, chrt *chart.Chart, vals ma
 		if i.KubeVersion != nil {
 			i.cfg.Capabilities.KubeVersion = *i.KubeVersion
 		}
-		i.cfg.Capabilities.APIVersions = append(i.cfg.Capabilities.APIVersions, i.APIVersions...)
+    if i.StrictAPIVersions && len(i.APIVersions) > 0 {
+      i.cfg.Capabilities.APIVersions = i.APIVersions
+    } else {
+		  i.cfg.Capabilities.APIVersions = append(i.cfg.Capabilities.APIVersions, i.APIVersions...)
+    }
 		i.cfg.KubeClient = &kubefake.PrintingKubeClient{Out: io.Discard}
 
 		mem := driver.NewMemory()
